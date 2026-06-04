@@ -1,7 +1,6 @@
 <div align="center">
 
-<!-- Hero image: generate with the prompt in docs/hero-prompt.md, save as assets/hero.png, then uncomment -->
-<!-- <img src="assets/hero.png" alt="leollama.vim — local AI ghost-text completion for Vim" width="640"/> -->
+<img src="assets/hero.png" alt="leollama.vim — a llama coding offline in Vim at a cozy desk, ethernet cable unplugged" width="100%"/>
 
 # 🦙 leollama.vim
 
