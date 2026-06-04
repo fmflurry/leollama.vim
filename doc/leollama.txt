@@ -1,0 +1,168 @@
+*leollama.txt*  Inline ghost-text autocomplete for Vim 9 via local Ollama FIM
+
+Author:  Florian Michel (fmflurry)
+License: MIT
+
+==============================================================================
+CONTENTS                                                     *leollama-contents*
+
+  1. Introduction ........................... |leollama-introduction|
+  2. Requirements ........................... |leollama-requirements|
+  3. Setup .................................. |leollama-setup|
+  4. Usage .................................. |leollama-usage|
+  5. Commands ............................... |leollama-commands|
+  6. Configuration .......................... |leollama-config|
+  7. Highlighting ........................... |leollama-highlight|
+  8. Limitations ............................ |leollama-limitations|
+
+==============================================================================
+1. INTRODUCTION                                          *leollama-introduction*
+
+leollama.vim provides Copilot-style inline ghost-text autocomplete for
+classic Vim 9, powered by a local Ollama server through its native generate
+endpoint with fill-in-the-middle (FIM) support. Completely free: no API key,
+no rate limits, works offline. It uses native virtual text (|textprop|) and
+async jobs (|job|); it needs no Neovim and no Node, only `curl`.
+
+==============================================================================
+2. REQUIREMENTS                                          *leollama-requirements*
+
+- Vim 9.0.0067+ with |+textprop| and |+job|
+  Check with: >
+      :echo has('patch-9.0.0067') && has('textprop') && has('job')
+<
+- `curl` on $PATH
+- Ollama running locally (https://ollama.com)
+- A FIM-capable model. Default: >
+      ollama pull qwen2.5-coder:7b-base
+<
+  Smaller variants (1.5b, 3b) give lower latency at weaker quality.
+  Other FIM-capable families: codellama:*-code, starcoder2, codegemma.
+  Chat/instruct-only models (gemma2, llama3, ...) will NOT fill-in-middle.
+
+==============================================================================
+3. SETUP                                                        *leollama-setup*
+
+Make sure the Ollama server is up: >
+
+      ollama serve        # or the menu-bar app
+<
+No API key, no environment variable. The plugin talks to
+http://localhost:11434 by default, see |g:leollama_endpoint|.
+
+==============================================================================
+4. USAGE                                                        *leollama-usage*
+
+Type in insert mode. After a short debounce a grey suggestion appears after
+the cursor. Press <Tab> to accept it, or <C-]> to dismiss. When no suggestion
+is visible, <Tab> behaves normally (real tab, or popup-menu navigation).
+
+The first request after a cold start is slow (model loads into memory);
+subsequent requests are fast while the model stays resident.
+
+==============================================================================
+5. COMMANDS                                                  *leollama-commands*
+
+                                                                *:LeOllamaToggle*
+:LeOllamaToggle         Enable or disable suggestions for the session.
+
+                                                               *:LeOllamaDismiss*
+:LeOllamaDismiss        Clear the currently displayed suggestion.
+
+==============================================================================
+6. CONFIGURATION                                               *leollama-config*
+
+Set these before the plugin loads (e.g. in your vimrc).
+
+                                                             *g:leollama_enabled*
+g:leollama_enabled           (default v:true)
+        Start with suggestions enabled.
+
+                                                               *g:leollama_model*
+g:leollama_model             (default "qwen2.5-coder:7b-base")
+        Ollama model tag used for FIM completion. Must be pulled first and
+        must support the suffix parameter (FIM-capable template).
+
+                                                         *g:leollama_debounce_ms*
+g:leollama_debounce_ms       (default 150)
+        Idle time in ms after a keystroke before a request fires. Local
+        inference is slower than hosted APIs; raise this (300-500) if
+        requests pile up on a small machine.
+
+                                                          *g:leollama_max_tokens*
+g:leollama_max_tokens        (default 64)
+        Sent as Ollama's num_predict option. 64 tokens is ~4-5 lines, more
+        than |g:leollama_max_lines| ever displays; a higher cap only slows
+        the worst case when the model generates a runaway completion.
+
+                                                           *g:leollama_max_lines*
+g:leollama_max_lines         (default 3)
+        Maximum number of lines shown in a single ghost-text suggestion.
+        The model often keeps generating well past the useful completion,
+        and those trailing lines tend to hallucinate; capping the suggestion
+        to the first few lines keeps quality high. Set to 0 to disable the
+        cap and show the full response.
+
+                                                          *g:leollama_max_prefix*
+g:leollama_max_prefix        (default 2000)
+        Max bytes of pre-cursor context sent as the FIM prompt. When the
+        prefix is trimmed, it is realigned to the next line boundary so the
+        prompt never begins mid-line. Kept deliberately small: prompt
+        evaluation dominates local FIM latency, so bigger context means
+        directly slower suggestions. Raise only on a fast GPU.
+
+                                                          *g:leollama_max_suffix*
+g:leollama_max_suffix        (default 1000)
+        Max bytes of post-cursor context sent as the FIM suffix. When the
+        suffix is trimmed, it is realigned to the previous line boundary so
+        the suffix never ends mid-line. The suffix is re-evaluated on every
+        request (it sits after the cursor in the FIM template, so the KV
+        prefix cache cannot cover it) — keep it small.
+
+                                                          *g:leollama_keep_alive*
+g:leollama_keep_alive        (default "60m")
+        Sent as Ollama's keep_alive on every request. Keeps the model
+        resident in memory between suggestions, avoiding the multi-second
+        cold reload after Ollama's default 5-minute idle unload.
+
+                                                         *g:leollama_temperature*
+g:leollama_temperature       (default 0.2)
+
+                                                                *g:leollama_stop*
+g:leollama_stop              (default ["\n\n\n"])
+        List of stop sequences (Ollama options.stop). Guards against
+        runaway multi-block completions. Set to [] to disable.
+
+                                                          *g:leollama_accept_key*
+g:leollama_accept_key        (default "<Tab>")
+        Insert-mode key mapped to accept a suggestion.
+
+                                                            *g:leollama_endpoint*
+g:leollama_endpoint
+        (default "http://localhost:11434/api/generate")
+        Point at another host/port if Ollama runs elsewhere on your LAN.
+
+==============================================================================
+7. HIGHLIGHTING                                             *leollama-highlight*
+
+                                                               *hl-LeOllamaGhost*
+Ghost text uses the LeOllamaGhost highlight group, linked to Comment by
+default. Override it: >
+
+      highlight LeOllamaGhost ctermfg=245 guifg=#6c7086
+<
+==============================================================================
+8. LIMITATIONS                                            *leollama-limitations*
+
+- Quality depends on the local model size; even a 7b model is somewhat
+  weaker than hosted Codestral/DeepSeek, but free and private.
+- First request after cold start is slow (model load).
+- The chosen model must support FIM; instruct-only models return prose.
+- No streaming; one request per debounce window.
+- Suggestions only appear in insert mode.
+- If lecodestral.vim or ledeepseek.vim is also loaded, they all map <Tab>
+  by default — set |g:leollama_accept_key| to avoid a clash, or load only
+  one provider plugin at a time.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
