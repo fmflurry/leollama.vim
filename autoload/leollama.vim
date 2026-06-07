@@ -5,7 +5,7 @@
 "   POST http://localhost:11434/api/generate
 "   { model, prompt, suffix, stream: false, options: {...} }
 " FIM works for models whose template supports the suffix parameter
-" (qwen2.5-coder*, codellama:*-code, starcoder2, ...). Response JSON carries
+" (qwen3:8b, codellama:*-code, starcoder2, ...). Response JSON carries
 " the completion in the top-level "response" field. No API key needed.
 
 let s:default_endpoint = 'http://localhost:11434/api/generate'
@@ -188,7 +188,7 @@ function! s:trigger(...) abort
     let l:options.stop = l:stop
   endif
   let l:payload = {
-        \ 'model': s:get('model', 'qwen2.5-coder:7b-base'),
+        \ 'model': s:get('model', 'qwen3:8b'),
         \ 'prompt': l:prefix,
         \ 'suffix': l:suffix,
         \ 'stream': v:false,

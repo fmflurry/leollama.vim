@@ -34,7 +34,7 @@ async jobs (|job|); it needs no Neovim and no Node, only `curl`.
 - `curl` on $PATH
 - Ollama running locally (https://ollama.com)
 - A FIM-capable model. Default: >
-      ollama pull qwen2.5-coder:7b-base
+      ollama pull qwen3:8b
 <
   Smaller variants (1.5b, 3b) give lower latency at weaker quality.
   Other FIM-capable families: codellama:*-code, starcoder2, codegemma.
@@ -79,7 +79,7 @@ g:leollama_enabled           (default v:true)
         Start with suggestions enabled.
 
                                                                *g:leollama_model*
-g:leollama_model             (default "qwen2.5-coder:7b-base")
+g:leollama_model             (default "qwen3:8b")
         Ollama model tag used for FIM completion. Must be pulled first and
         must support the suffix parameter (FIM-capable template).
 
