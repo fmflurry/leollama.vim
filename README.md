@@ -32,7 +32,7 @@ def fibonacci(n):
 
 - 🔒 **Private** — completions are generated on your own machine; nothing is sent to any cloud.
 - 💸 **Free forever** — no per-token billing, no free-tier rate limits, works offline on a plane.
-- ⚡ **Fast** — ~300–800 ms warm on Apple Silicon with `qwen3:8b`, thanks to Ollama's KV prompt caching and a deliberately tight context window.
+- ⚡ **Fast** — ~300–800 ms warm on Apple Silicon with `qwen2.5-coder:7b-base`, thanks to Ollama's KV prompt caching and a deliberately tight context window.
 - 🪶 **Zero bloat** — pure Vim script. Native virtual text (`+textprop`) and async jobs (`+job`). No Neovim required, no Node, no Python — only `curl`.
 
 ## 📦 Requirements
@@ -42,7 +42,7 @@ def fibonacci(n):
 | Vim **9.0.0067+** with `+textprop` and `+job` | ghost text & async requests |
 | `curl` on `$PATH` | talks to the Ollama HTTP API |
 | [Ollama](https://ollama.com) running locally | serves the model |
-| A **FIM-capable** model | `qwen3:8b`, `codellama:*-code`, `starcoder2`, … |
+| A **FIM-capable** model | `qwen2.5-coder:7b-base`, `codellama:*-code`, `starcoder2`, … (qwen3:8b and qwen3-coder do NOT work — Ollama does not expose `suffix`/insert for them) |
 
 Check your Vim:
 
@@ -52,10 +52,10 @@ Check your Vim:
 
 ## 🚀 Setup
 
-**1.** Pull a fill-in-the-middle model (the default, ~5.2 GB):
+**1.** Pull a fill-in-the-middle model (the default, ~4.7 GB):
 
 ```sh
-ollama pull qwen3:8b
+ollama pull qwen2.5-coder:7b-base
 ```
 
 **2.** Install the plugin with your favourite manager:
@@ -84,7 +84,7 @@ Plug 'fmflurry/leollama.vim'
 All defaults, shown with their tuning rationale — see `:help leollama` for the full reference.
 
 ```vim
-let g:leollama_model       = 'qwen3:8b'               " FIM-capable Ollama model tag
+let g:leollama_model       = 'qwen2.5-coder:7b-base'   " FIM-capable Ollama model tag
 let g:leollama_endpoint    = 'http://localhost:11434/api/generate'
 let g:leollama_debounce_ms = 150     " idle time before a request fires
 let g:leollama_max_lines   = 3       " ghost-text lines shown (0 = unlimited)
@@ -103,20 +103,12 @@ Prompt evaluation dominates local FIM latency — **context size is your throttl
 
 | Want | Do |
 |---|---|
-| Faster | smaller model (`qwen3:4b`), lower `max_prefix`/`max_tokens` |
-| Smarter | `ollama pull qwen3:14b` + `let g:leollama_model = 'qwen3:14b'`, raise `max_prefix` |
+| Faster | `ollama pull qwen2.5-coder:3b-base` + `let g:leollama_model = 'qwen2.5-coder:3b-base'`, lower `max_prefix`/`max_tokens` |
+| Smarter | `ollama pull qwen2.5-coder:7b-base` + `let g:leollama_model = 'qwen2.5-coder:7b-base'`, raise `max_prefix` |
 
-Measured on an M4 Pro (warm, typing steady-state): **8b ≈ 600–1200 ms**, 14b ≈ 1.2–2.5 s.
+Measured on an M4 Pro (warm, typing steady-state): **3b ≈ 300–600 ms**, 7b ≈ 600–1200 ms.
 
 ## 🎨 Highlighting
-
-Ghost text links to `Comment` by default. Override:
-
-```vim
-highlight LeOllamaGhost ctermfg=245 guifg=#6c7086
-```
-
-## ⚠️ Limitations
 
 - The model must support FIM — instruct/chat models (`llama3`, `gemma2`, …) return prose, not code fills.
 - Quality tracks model size: a local 3b is not hosted-Copilot, but it's free and private.

@@ -34,11 +34,14 @@ async jobs (|job|); it needs no Neovim and no Node, only `curl`.
 - `curl` on $PATH
 - Ollama running locally (https://ollama.com)
 - A FIM-capable model. Default: >
-      ollama pull qwen3:8b
+      ollama pull qwen2.5-coder:7b-base
 <
   Smaller variants (1.5b, 3b) give lower latency at weaker quality.
-  Other FIM-capable families: codellama:*-code, starcoder2, codegemma.
-  Chat/instruct-only models (gemma2, llama3, ...) will NOT fill-in-middle.
+  Other FIM-capable families: codellama:*-code, starcoder2, codegemma,
+  deepseek-coder:*-base.
+  IMPORTANT: the model MUST support FIM (fill-in-middle). Chat/instruct-only
+  models (gemma2, llama3, qwen3:8b, qwen3-coder, ...) will NOT work — Ollama
+  does not expose the suffix/insert parameter for them.
 
 ==============================================================================
 3. SETUP                                                        *leollama-setup*
@@ -79,9 +82,11 @@ g:leollama_enabled           (default v:true)
         Start with suggestions enabled.
 
                                                                *g:leollama_model*
-g:leollama_model             (default "qwen3:8b")
+g:leollama_model             (default "qwen2.5-coder:7b-base")
         Ollama model tag used for FIM completion. Must be pulled first and
-        must support the suffix parameter (FIM-capable template).
+        must support the suffix parameter (FIM-capable template). Chat/general
+        models such as qwen3:8b and qwen3-coder are NOT supported — Ollama
+        does not expose the suffix/insert parameter for them.
 
                                                          *g:leollama_debounce_ms*
 g:leollama_debounce_ms       (default 150)
