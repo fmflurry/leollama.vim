@@ -23,6 +23,7 @@ endif
 augroup LeOllama
   autocmd!
   autocmd TextChangedI * call leollama#on_change()
+  autocmd CursorHoldI  * call leollama#on_idle()
   autocmd InsertLeave,BufLeave * call leollama#on_leave()
 augroup END
 

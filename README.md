@@ -66,7 +66,18 @@ Plug 'fmflurry/leollama.vim'
 ```
 
 **3.** Open a file, enter insert mode, type. Grey ghost text appears after a short pause — `<Tab>` accepts, `<C-]>` dismisses. That's it. No API key, no account.
+**3.** Open a file, enter insert mode, type. Grey ghost text appears after a short pause — `<Tab>` accepts, `<C-]>` dismisses. That's it. No API key, no account.
 
+Suggestions also appear when the cursor sits **idle** in insert mode (after `&updatetime` ms with no keypress). Lower `updatetime` for snappier idle completions:
+
+```vim
+set updatetime=500        " fire CursorHoldI after 500 ms of idle
+```
+
+Disable idle suggestions with `let g:leollama_idle = 0`.
+
+> [!TIP]
+> The first suggestion after a cold start takes a few seconds while the model loads into memory. The plugin sends `keep_alive: 60m` with every request, so the model stays warm for your whole session.
 > [!TIP]
 > The first suggestion after a cold start takes a few seconds while the model loads into memory. The plugin sends `keep_alive: 60m` with every request, so the model stays warm for your whole session.
 
@@ -87,6 +98,7 @@ All defaults, shown with their tuning rationale — see `:help leollama` for the
 let g:leollama_model       = 'qwen2.5-coder:7b-base'   " FIM-capable Ollama model tag
 let g:leollama_endpoint    = 'http://localhost:11434/api/generate'
 let g:leollama_debounce_ms = 150     " idle time before a request fires
+let g:leollama_idle        = 1       " 1 = also trigger on CursorHoldI, 0 = on-type only
 let g:leollama_max_lines   = 3       " ghost-text lines shown (0 = unlimited)
 let g:leollama_max_tokens  = 64      " num_predict — ~4-5 lines, more is wasted GPU time
 let g:leollama_max_prefix  = 2000    " bytes of code before the cursor

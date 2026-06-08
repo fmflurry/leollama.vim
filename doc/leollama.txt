@@ -57,6 +57,10 @@ http://localhost:11434 by default, see |g:leollama_endpoint|.
 4. USAGE                                                        *leollama-usage*
 
 Type in insert mode. After a short debounce a grey suggestion appears after
+
+Suggestions also appear when the cursor sits idle in insert mode (no keypress
+for |'updatetime'| milliseconds). See |g:leollama_idle| to configure or
+disable this behaviour.
 the cursor. Press <Tab> to accept it, or <C-]> to dismiss. When no suggestion
 is visible, <Tab> behaves normally (real tab, or popup-menu navigation).
 
@@ -80,6 +84,21 @@ Set these before the plugin loads (e.g. in your vimrc).
                                                              *g:leollama_enabled*
 g:leollama_enabled           (default v:true)
         Start with suggestions enabled.
+
+                                                                *g:leollama_idle*
+g:leollama_idle              (default 1)
+        When 1, a completion is also requested when the cursor sits idle in
+        insert mode (triggered by |CursorHoldI|, which fires after
+        |'updatetime'| milliseconds with no keypress). Set to 0 to disable
+        idle suggestions and revert to the on-type-only behaviour.
+
+        The timing is controlled by Vim's |'updatetime'| option (default
+        4000 ms). Lower it for snappier idle completions: >
+            set updatetime=500
+<
+        Tip: idle suggestions are skipped automatically when a ghost-text
+        suggestion is already visible, so there is no flicker or redundant
+        re-request.
 
                                                                *g:leollama_model*
 g:leollama_model             (default "qwen2.5-coder:7b-base")

@@ -226,6 +226,25 @@ function! leollama#on_change() abort
   let s:timer_id = timer_start(s:get('debounce_ms', 150), function('s:trigger'))
 endfunction
 
+function! leollama#on_idle() abort
+  if !s:enabled
+    return
+  endif
+  if !s:get('idle', 1)
+    return
+  endif
+  if s:ghost_active
+    return
+  endif
+  if mode() !~# '^i'
+    return
+  endif
+  if s:timer_id != -1
+    call timer_stop(s:timer_id)
+  endif
+  let s:timer_id = timer_start(0, function('s:trigger'))
+endfunction
+
 function! leollama#on_leave() abort
   call s:clear_ghost()
 endfunction
