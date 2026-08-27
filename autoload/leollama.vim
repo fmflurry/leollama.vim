@@ -62,6 +62,57 @@ function! s:render_ghost(lines) abort
   let s:ghost_active = 1
 endfunction
 
+" Checks whether the text the user just typed (since the anchor col/lnum of
+" the currently displayed ghost) is an exact byte-prefix of the ghost's
+" first line. If so, shrinks the ghost in place instead of clearing it.
+" Returns one of:
+"   'no-ghost'  — no ghost was active, caller should behave as before
+"   'matched'   — typed text consumed (partially or fully, with lines left);
+"                 a shrunk ghost is now rendered, caller must not re-trigger
+"   'exhausted' — typed text consumed the entire remaining suggestion;
+"                 ghost cleared, caller may re-trigger
+"   'diverged'  — typed text left the anchor or no longer matches;
+"                 ghost cleared, caller may re-trigger
+function! s:consume_typed_prefix() abort
+  if !s:ghost_active
+    return 'no-ghost'
+  endif
+  if bufnr('%') != s:req_buf || line('.') != s:req_lnum
+    call s:clear_ghost()
+    return 'diverged'
+  endif
+  let l:col = col('.')
+  if l:col < s:req_col
+    call s:clear_ghost()
+    return 'diverged'
+  endif
+  let l:typed = strpart(getline('.'), s:req_col - 1, l:col - s:req_col)
+  if l:typed ==# ''
+    call s:clear_ghost()
+    return 'diverged'
+  endif
+  let l:first = s:ghost_lines[0]
+  if stridx(l:first, l:typed) != 0
+    call s:clear_ghost()
+    return 'diverged'
+  endif
+  if l:typed ==# l:first
+    if len(s:ghost_lines) > 1
+      let s:ghost_lines = s:ghost_lines[1:]
+      let s:req_lnum = line('.')
+      let s:req_col = l:col
+      call s:render_ghost(s:ghost_lines)
+      return 'matched'
+    endif
+    call s:clear_ghost()
+    return 'exhausted'
+  endif
+  let s:ghost_lines[0] = strpart(l:first, strlen(l:typed))
+  let s:req_col = l:col
+  call s:render_ghost(s:ghost_lines)
+  return 'matched'
+endfunction
+
 function! s:on_out(gen, ch, msg) abort
   if a:gen != s:gen
     return
@@ -217,6 +268,14 @@ endfunction
 
 function! leollama#on_change() abort
   if !s:enabled
+    return
+  endif
+  let l:result = s:consume_typed_prefix()
+  if l:result ==# 'matched'
+    if s:timer_id != -1
+      call timer_stop(s:timer_id)
+      let s:timer_id = -1
+    endif
     return
   endif
   call s:clear_ghost()
