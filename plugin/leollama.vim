@@ -15,13 +15,14 @@ if !has('patch-9.0.0067') || !has('textprop') || !has('job')
   finish
 endif
 
-highlight default link LeOllamaGhost Comment
+highlight default LeOllamaGhost guifg=#808080 ctermfg=245 gui=NONE cterm=NONE
 if empty(prop_type_get('leollama_ghost'))
   call prop_type_add('leollama_ghost', {'highlight': 'LeOllamaGhost'})
 endif
 
 augroup LeOllama
   autocmd!
+  autocmd ColorScheme * highlight default LeOllamaGhost guifg=#808080 ctermfg=245 gui=NONE cterm=NONE
   autocmd TextChangedI * call leollama#on_change()
   autocmd CursorHoldI  * call leollama#on_idle()
   autocmd InsertLeave,BufLeave * call leollama#on_leave()
